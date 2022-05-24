@@ -1,11 +1,5 @@
 import * as path from "path";
-import { ITuple2, Tuple2 } from "@pagopa/ts-commons/lib/tuples";
-import {
-  createTableService,
-  ServiceResponse,
-  TableService,
-} from "azure-storage";
-import { Either, left, right } from "fp-ts/lib/Either";
+import { createTableService } from "azure-storage";
 import {
   AbortableFetch,
   setFetchTimeout,
@@ -17,42 +11,16 @@ import { getConfigOrThrow } from "./config";
 import { APIClient } from "./apiClient";
 import { fiscalCodesDataReader } from "./dataReader";
 import { InsertFailedUserDataProcessingEntityFn, main } from "./process";
-import { log } from "./logger";
+import { log } from "./utils/logger";
+import { insertOrReplaceTableEntity } from "./utils/tableStorage";
 const fiscalCodeFilename = "fiscal_codes.txt";
-
-/**
- * A promisified version of TableService.insertEntity
- */
-export const insertTableEntity =
-  (tableService: TableService, table: string) =>
-  <T>(
-    entityDescriptor: T
-  ): Promise<ITuple2<Either<Error, T>, ServiceResponse>> =>
-    new Promise((resolve) =>
-      tableService.insertEntity(
-        table,
-        entityDescriptor,
-        (
-          error: Error,
-          _: TableService.EntityMetadata,
-          response: ServiceResponse
-        ) =>
-          resolve(
-            response.isSuccessful
-              ? Tuple2(right(entityDescriptor), response)
-              : Tuple2(left(error), response)
-          )
-      )
-    );
-
-export type InsertTableEntity = ReturnType<typeof insertTableEntity>;
 
 const config = getConfigOrThrow();
 const connectionString = config.FailedUserDataProcessingStorageConnection;
 const failedUserDataProcessingTable = config.FAILED_USER_DATA_PROCESSING_TABLE;
 const failedUserDataProcessingService = createTableService(connectionString);
-const insertTableEntityFn: InsertFailedUserDataProcessingEntityFn =
-  insertTableEntity(
+const insertFailedUserDataProcessingEntityFn: InsertFailedUserDataProcessingEntityFn =
+  insertOrReplaceTableEntity(
     failedUserDataProcessingService,
     failedUserDataProcessingTable
   );
@@ -74,6 +42,6 @@ const FN_APP_API_CLIENT = APIClient(API_KEY, API_URL, httpOrHttpsApiFetch);
 
 main(
   FN_APP_API_CLIENT,
-  insertTableEntityFn,
+  insertFailedUserDataProcessingEntityFn,
   fiscalCodesDataReader(path.join(__dirname, `../data/${fiscalCodeFilename}`))
 ).catch((err) => log.error(`The script execution failed Err [${err}]`));

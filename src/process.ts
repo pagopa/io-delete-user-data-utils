@@ -10,7 +10,7 @@ import { FiscalCode } from "@pagopa/ts-commons/lib/strings";
 import { UserDataProcessingChoiceEnum } from "@pagopa/io-functions-commons/dist/generated/definitions/UserDataProcessingChoice";
 import { fiscalCodesDataReader } from "./dataReader";
 import { APIClient } from "./apiClient";
-import { log } from "./logger";
+import { log } from "./utils/logger";
 
 interface IFailedUserDataProcessingEntity {
   readonly PartitionKey: TableUtilities.entityGenerator.EntityProperty<string>;
@@ -42,6 +42,9 @@ export const main = (
               RowKey: eg.String(fiscalCode),
             }),
           (err) =>
+            // On failure the whole procedure is stopped.
+            // Inserted table entity will be everridden by next execution
+            // becouse the entity uniqueness is on the same PartitionKey - RowKey
             new Error(
               `Error inserting the failure for CF [${fiscalCode}]; Err: [${err}]`
             )

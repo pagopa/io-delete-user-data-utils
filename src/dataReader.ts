@@ -2,7 +2,7 @@ import fs from "fs";
 import { FiscalCode } from "@pagopa/ts-commons/lib/strings";
 import { pipe } from "fp-ts/lib/function";
 import * as RA from "fp-ts/lib/ReadonlyArray";
-import { log } from "./logger";
+import { log } from "./utils/logger";
 
 /**
  * Read from a file a list of fiscal codes formatted one per line,
