@@ -1,0 +1,8 @@
+node_modules
+dist
+data/*
+src/generated
+.env
+coverage
+yarn-error.log
+tsconfig.tsbuildinfo

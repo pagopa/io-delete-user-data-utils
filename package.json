@@ -1,0 +1,59 @@
+{
+  "name": "filter-visible-services",
+  "version": "1.0.0",
+  "description": "Filter services from visible services cache json",
+  "main": "index.js",
+  "author": "Daniele Manni",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "pretest": "yarn generate",
+    "test": "jest",
+    "prebuild": "yarn clean",
+    "build": "tsc --build",
+    "lint": "eslint . -c .eslintrc.js --ext .ts,.tsx",
+    "start": "node ./dist/index.js",
+    "clean": "shx rm -rf dist",
+    "generate": "shx rm -rf src/generated/io-api && gen-api-models --api-spec https://raw.githubusercontent.com/pagopa/io-functions-app/v4.0.1/openapi/index.yaml --out-dir src/generated/io-api --request-types --response-decoders --client"
+  },
+  "devDependencies": {
+    "@pagopa/eslint-config": "^3.0.0",
+    "@pagopa/openapi-codegen-ts": "^10.1.0",
+    "@types/jest": "^27.5.1",
+    "@types/node": "^17.0.34",
+    "@types/node-fetch": "^2.6.1",
+    "dotenv-cli": "^5.1.0",
+    "jest": "^28.1.0",
+    "shx": "^0.3.3",
+    "ts-jest": "^28.0.2",
+    "typescript": "^4.5.4"
+  },
+  "dependencies": {
+    "@pagopa/io-functions-commons": "^24.3.0",
+    "@pagopa/ts-commons": "^10.4.0",
+    "azure-storage": "^2.10.7",
+    "fp-ts": "^2.11.5",
+    "io-ts": "^2.2.16",
+    "node-fetch": "^2.6.1"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "moduleFileExtensions": [
+      "ts",
+      "js",
+      "node"
+    ],
+    "testPathIgnorePatterns": [
+      "dist",
+      "node_modules"
+    ],
+    "transform": {
+      "^.+\\.(ts|tsx)$": "ts-jest"
+    },
+    "testMatch": [
+      "**/__tests__/*.ts"
+    ],
+    "coverageDirectory": "./coverage/",
+    "collectCoverage": true
+  }
+}
