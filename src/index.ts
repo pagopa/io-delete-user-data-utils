@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import * as path from "path";
 import { ITuple2, Tuple2 } from "@pagopa/ts-commons/lib/tuples";
 import {
@@ -18,6 +17,7 @@ import { getConfigOrThrow } from "./config";
 import { APIClient } from "./apiClient";
 import { fiscalCodesDataReader } from "./dataReader";
 import { InsertFailedUserDataProcessingEntityFn, main } from "./process";
+import { log } from "./logger";
 const fiscalCodeFilename = "fiscal_codes.txt";
 
 /**
@@ -76,4 +76,4 @@ main(
   FN_APP_API_CLIENT,
   insertTableEntityFn,
   fiscalCodesDataReader(path.join(__dirname, `../data/${fiscalCodeFilename}`))
-).catch((err) => console.error(`The script execution failed Err [${err}]`));
+).catch((err) => log.error(`The script execution failed Err [${err}]`));

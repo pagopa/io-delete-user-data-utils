@@ -4,12 +4,13 @@ import * as E from "fp-ts/lib/Either";
 import * as RA from "fp-ts/lib/ReadonlyArray";
 import * as TE from "fp-ts/lib/TaskEither";
 import { pipe } from "fp-ts/lib/function";
-import { APIClient } from "./apiClient";
 import * as t from "io-ts";
-import { Either, isRight, toError } from "fp-ts/lib/Either";
-import { fiscalCodesDataReader } from "./dataReader";
+import { isRight, toError } from "fp-ts/lib/Either";
 import { FiscalCode } from "@pagopa/ts-commons/lib/strings";
 import { UserDataProcessingChoiceEnum } from "@pagopa/io-functions-commons/dist/generated/definitions/UserDataProcessingChoice";
+import { fiscalCodesDataReader } from "./dataReader";
+import { APIClient } from "./apiClient";
+import { log } from "./logger";
 
 interface IFailedUserDataProcessingEntity {
   readonly PartitionKey: TableUtilities.entityGenerator.EntityProperty<string>;
@@ -63,19 +64,22 @@ export const main = (
               }),
             toError
           ), // For each fiscalCode create the upsertUserDataProcessing API call
-          TE.chainW(TE.fromEither)
+          TE.chainW(TE.fromEither),
+          TE.map((response) => ({ fiscalCode, response }))
         )
       )
     ),
     TE.chainW(RA.sequence(TE.ApplicativeSeq)), // Execute all the API calls sequentially
     TE.bimap(
       (err) => {
-        console.error(`Error executing the operation [${err}]`);
+        log.error(`Error executing the operation [${err}]`);
         return err;
       },
-      RA.map((response) => {
-        console.log(`Result response code: [${response.status}]`); // Log all the responses code
-        return response.status;
+      RA.map((_) => {
+        log.info(
+          `Status: [${_.response.status}] | FiscalCode: [${_.fiscalCode}]`
+        ); // Log all the responses code
+        return _.response.status;
       })
     )
   )();

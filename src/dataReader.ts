@@ -2,6 +2,7 @@ import fs from "fs";
 import { FiscalCode } from "@pagopa/ts-commons/lib/strings";
 import { pipe } from "fp-ts/lib/function";
 import * as RA from "fp-ts/lib/ReadonlyArray";
+import { log } from "./logger";
 
 /**
  * Read from a file a list of fiscal codes formatted one per line,
@@ -21,8 +22,7 @@ export const fiscalCodesDataReader =
         if (FiscalCode.is(_)) {
           return _;
         } else {
-          // eslint-disable-next-line no-console
-          console.warn(`Invalid FiscalCode format. Skipped! [${_}]`);
+          log.warn(`Invalid FiscalCode format. Skipped! [${_}]`);
           return void 0;
         }
       }),
