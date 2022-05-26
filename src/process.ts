@@ -12,7 +12,7 @@ import { fiscalCodesDataReader } from "./dataReader";
 import { APIClient } from "./apiClient";
 import { log } from "./utils/logger";
 
-interface IFailedUserDataProcessingEntity {
+export interface IFailedUserDataProcessingEntity {
   readonly PartitionKey: TableUtilities.entityGenerator.EntityProperty<string>;
   readonly Reason: TableUtilities.entityGenerator.EntityProperty<string>;
   readonly RowKey: TableUtilities.entityGenerator.EntityProperty<string>;
@@ -89,7 +89,12 @@ export const main = (
                 },
                 fiscal_code: fiscalCode,
               }),
-            toError
+            (err) =>
+              new Error(
+                `Error calling upsertUserDataProcessing FiscalCode: [${fiscalCode}] | Error: [${toError(
+                  err
+                )}]`
+              )
           ), // For each fiscalCode create the upsertUserDataProcessing API call
           TE.chainW(TE.fromEither),
           TE.map((response) => ({ fiscalCode, response }))
@@ -99,7 +104,7 @@ export const main = (
     TE.chainW(RA.sequence(TE.ApplicativeSeq)), // Execute all the API calls sequentially
     TE.bimap(
       (err) => {
-        log.error(`Error executing the operation [${err}]`);
+        log.error(`${err}]`);
         return err;
       },
       RA.map((_) => {
