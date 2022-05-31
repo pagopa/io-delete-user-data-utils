@@ -47,7 +47,7 @@ export const main = (
               // Inserted table entity will be everridden by next execution
               // becouse the entity uniqueness is on the same PartitionKey - RowKey
               new Error(
-                `Error inserting the failure for CF [${fiscalCode}]; Err: [${err}]`
+                `InsertFailedEntity|FAILURE|${fiscalCode}|Err: [${err}]`
               )
           ),
           TE.map((_) => ({ fiscalCode, insertFailedEntity: _ }))
@@ -71,7 +71,7 @@ export const main = (
           // log an error for each failed insert Failed User data
           RA.map((errorFiscalCode) =>
             log.error(
-              `Error inserting Failed User data for FiscalCode: [${errorFiscalCode}}]`
+              `InsertFailedEntity|NOT SUCCESS|${errorFiscalCode}|SKIPPED`
             )
           )
         ),
@@ -91,17 +91,16 @@ export const main = (
               }),
             (err) =>
               new Error(
-                `Error calling upsertUserDataProcessing FiscalCode: [${fiscalCode}] | Error: [${toError(
+                `UpsertUserDataProcessing|FAILURE|${fiscalCode}|Err: [${toError(
                   err
                 )}]`
               )
           ), // For each fiscalCode create the upsertUserDataProcessing API call
-          TE.chainW(TE.fromEither),
-          TE.map((response) => ({ fiscalCode, response }))
+          TE.chainEitherKW(E.map((response) => ({ fiscalCode, response })))
         )
       )
     ),
-    TE.chainW(RA.sequence(TE.ApplicativeSeq)), // Execute all the API calls sequentially
+    TE.chain(RA.sequence(TE.ApplicativeSeq)), // Execute all the API calls sequentially
     TE.bimap(
       (err) => {
         log.error(`${err}]`);
