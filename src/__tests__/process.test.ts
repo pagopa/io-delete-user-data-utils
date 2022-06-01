@@ -48,7 +48,9 @@ const upsertUserDataProcessing = jest
 const mockApiClient = {
   upsertUserDataProcessing,
 } as unknown as ReturnType<APIClient>;
-const mockInsertFailedEntity = jest.fn();
+const mockInsertFailedEntity = jest
+  .fn()
+  .mockImplementation(InsertFailedEntitySuccessImpl());
 const mockFiscalCodeDataReader = jest.fn().mockImplementation(() => []);
 
 const aFiscalCode = "AAAAAA00A00A000A" as FiscalCode;
@@ -73,7 +75,7 @@ describe("index.ts", () => {
     expect(upsertUserDataProcessing).not.toBeCalled();
     expect(mockInsertFailedEntity).not.toBeCalled();
   });
-  it("should success if valid fiscal_code is provided and table and cosmos query success", async () => {
+  it("should success if valid fiscal_code is provided and insertFailedEntity and upsertUserDataProcessing success", async () => {
     mockFiscalCodeDataReader.mockImplementationOnce(() => [aFiscalCode]);
     mockInsertFailedEntity.mockImplementationOnce(
       InsertFailedEntitySuccessImpl()
@@ -101,7 +103,7 @@ describe("index.ts", () => {
     expect(E.isRight(result)).toBeTruthy();
   });
 
-  it("should call table and cosmos query on the same order of input", async () => {
+  it("should call insertFailedEntity and upsertUserDataProcessing on the same order of input", async () => {
     const inputFiscalCodes = [aFiscalCode, ...otherFiscalCodes];
     mockFiscalCodeDataReader.mockImplementationOnce(() => inputFiscalCodes);
 
@@ -143,7 +145,7 @@ describe("index.ts", () => {
     expect(E.isRight(result)).toBeTruthy();
   });
 
-  it("should fail if one insert failed entity call fail", async () => {
+  it("should fail if one insertFailedEntity call fail", async () => {
     mockFiscalCodeDataReader.mockImplementationOnce(() => otherFiscalCodes);
     const lastElementIndex = otherFiscalCodes.length - 1;
     pipe(
@@ -167,6 +169,44 @@ describe("index.ts", () => {
     expect(upsertUserDataProcessing).not.toBeCalled();
 
     expect(E.isLeft(result)).toBeTruthy();
+  });
+
+  it("should ship a fiscal_code if one insertFailedEntity call returns a non success response", async () => {
+    mockFiscalCodeDataReader.mockImplementationOnce(() => otherFiscalCodes);
+    pipe(
+      otherFiscalCodes,
+      RA.mapWithIndex((index, _el) => {
+        const randomDelay = Math.random() * 100;
+        mockInsertFailedEntity.mockImplementationOnce(
+          index === 0 // First element fail
+            ? () =>
+                Promise.resolve(
+                  Tuple2(E.left(new Error("success = false")), {})
+                )
+            : InsertFailedEntitySuccessImpl(randomDelay)
+        );
+      })
+    );
+    const result = await main(
+      mockApiClient,
+      mockInsertFailedEntity,
+      mockFiscalCodeDataReader
+    );
+
+    expect(mockInsertFailedEntity).toBeCalledTimes(otherFiscalCodes.length);
+    expect(upsertUserDataProcessing).toBeCalledTimes(
+      otherFiscalCodes.length - 1
+    );
+    // Check that the first call to upsertUserDataProcessing
+    // is with the second fiscal code in input
+    expect(upsertUserDataProcessing).toHaveBeenNthCalledWith(1, {
+      body: {
+        choice: UserDataProcessingChoiceEnum.DELETE,
+      },
+      fiscal_code: otherFiscalCodes[1],
+    });
+
+    expect(E.isRight(result)).toBeTruthy();
   });
 
   it("should fail if one upsertUserDataProcessing fail", async () => {
@@ -247,5 +287,23 @@ describe("index.ts", () => {
       fiscal_code: otherFiscalCodes[1],
     });
     expect(E.isLeft(result)).toBeTruthy();
+  });
+
+  it("long input success", async () => {
+    const inputFiscalCodes: Array<FiscalCode> = [];
+    do {
+      inputFiscalCodes.push(aFiscalCode);
+    } while (inputFiscalCodes.length < 200);
+    mockFiscalCodeDataReader.mockImplementationOnce(() => inputFiscalCodes);
+
+    const result = await main(
+      mockApiClient,
+      mockInsertFailedEntity,
+      mockFiscalCodeDataReader
+    );
+
+    expect(mockInsertFailedEntity).toBeCalledTimes(inputFiscalCodes.length);
+    expect(upsertUserDataProcessing).toBeCalledTimes(inputFiscalCodes.length);
+    expect(E.isRight(result)).toBeTruthy();
   });
 });
