@@ -1,7 +1,7 @@
 {
-  "name": "filter-visible-services",
+  "name": "delete-user-data-utils",
   "version": "1.0.0",
-  "description": "Filter services from visible services cache json",
+  "description": "Delete user data Utils",
   "main": "index.js",
   "author": "Daniele Manni",
   "license": "MIT",
@@ -9,10 +9,10 @@
     "pretest": "yarn generate",
     "test": "jest",
     "prebuild": "yarn clean",
-    "build": "tsc --build",
+    "build": "tsc",
     "lint": "eslint . -c .eslintrc.js --ext .ts,.tsx",
-    "start": "node ./dist/index.js",
-    "clean": "shx rm -rf dist",
+    "start": "dotenv -e .env node ./dist/index.js",
+    "clean": "shx rm -rf dist && shx rm tsconfig.tsbuildinfo",
     "generate": "shx rm -rf src/generated/io-api && gen-api-models --api-spec https://raw.githubusercontent.com/pagopa/io-functions-app/v4.0.1/openapi/index.yaml --out-dir src/generated/io-api --request-types --response-decoders --client"
   },
   "devDependencies": {
