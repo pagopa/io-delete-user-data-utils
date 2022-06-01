@@ -1,7 +1,7 @@
 {
-  "name": "delete-user-data-utils",
+  "name": "io-delete-user-data-utils",
   "version": "1.0.0",
-  "description": "Delete user data Utils",
+  "description": "IO Delete user data Utils",
   "main": "index.js",
   "author": "Daniele Manni",
   "license": "MIT",
