@@ -38,7 +38,11 @@ const httpOrHttpsApiFetch = toFetch(fetchWithTimeout);
 
 const API_KEY = config.API_KEY;
 const API_URL = config.API_URL;
-const FN_APP_API_CLIENT = APIClient(API_KEY, API_URL, httpOrHttpsApiFetch);
+const FN_APP_API_CLIENT = APIClient({
+  baseUrl: API_URL,
+  fetchApi: httpOrHttpsApiFetch,
+  token: API_KEY,
+});
 
 main(
   FN_APP_API_CLIENT,

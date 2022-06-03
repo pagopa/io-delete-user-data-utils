@@ -10,12 +10,13 @@ import { readableReport } from "@pagopa/ts-commons/lib/reporters";
 import { NonEmptyString } from "@pagopa/ts-commons/lib/strings";
 import * as E from "fp-ts/lib/Either";
 import { pipe } from "fp-ts/lib/function";
+import { UrlFromString } from "@pagopa/ts-commons/lib/url";
 
 // global app configuration
 export type IConfig = t.TypeOf<typeof IConfig>;
 export const IConfig = t.interface({
   API_KEY: NonEmptyString,
-  API_URL: NonEmptyString,
+  API_URL: UrlFromString,
   FAILED_USER_DATA_PROCESSING_TABLE: NonEmptyString,
   FailedUserDataProcessingStorageConnection: NonEmptyString,
   isProduction: t.boolean,
